@@ -1,0 +1,211 @@
+import java.util.Random;
+import java.util.Scanner;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class CincoEnRaya {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+        int n;
+        
+        System.out.println("¡bienvenido!");
+        //do para establecer que si el tablero es menor que 5 no puedas jugar
+        do {        	
+            System.out.print("ingresa un numero entero para hacer el tablero: " + 
+            				"\n(recuerda que minimo tiene que ser de 5x5)");
+            n = scanner.nextInt();
+        }while(n < 5);
+        
+        if (n >=5) {
+        	
+        char[][] tablero = inicializarTablero(n);//creacion de tablero
+
+        System.out.print("ingresa el nombre del jugador 1: ");
+        String jugador1 = scanner.next();
+        System.out.print("ingresa el nombre del jugador 2: ");
+        String jugador2 = scanner.next();
+
+        //asignacion de ficha eleatoria a cada jugador
+        char fichaJugador1 = (random.nextBoolean()) ? 'X' : 'O';
+        char fichaJugador2 = (fichaJugador1 == 'X') ? 'O' : 'X';
+
+        System.out.println(jugador1 + " jugará con " + fichaJugador1);
+        System.out.println(jugador2 + " jugará con " + fichaJugador2);
+
+        //numero fichas que tiene cada jugador
+        int movimientosPermitidos = (n * n)/2+1;
+        int movimientosJugador1 = 0;
+        int movimientosJugador2 = 0;
+
+        boolean turnoJugador1 = random.nextBoolean();
+
+        //bucle para juagar
+        while (true) {
+            mostrarTablero(tablero);
+
+            //control de juego y movimiento
+            if (turnoJugador1) {
+                if (movimientosJugador1 >= movimientosPermitidos) {
+                    System.out.println(jugador1 + " ha alcanzado el límite de movimientos permitidos.");
+                    break;
+                }
+                System.out.println("es el turno de " + jugador1);
+                realizarMovimiento(tablero, fichaJugador1);
+                movimientosJugador1++;
+            } else {
+                if (movimientosJugador2 >= movimientosPermitidos) {
+                    System.out.println(jugador2 + " ha alcanzado el límite de movimientos permitidos.");
+                    break;
+                }
+                System.out.println("es el turno de " + jugador2);
+                realizarMovimiento(tablero, fichaJugador2);
+                movimientosJugador2++;
+            }//FIN DE CONTROL DE JUEGO Y MOVIMIENTO
+
+            //control de ganador
+            if (haGanado(tablero, fichaJugador1)) {
+                mostrarTablero(tablero);
+                System.out.println(jugador1 + " ha ganado!");
+                break;
+            } else if (haGanado(tablero, fichaJugador2)) {
+                mostrarTablero(tablero);
+                System.out.println(jugador2 + " ha ganado!");
+                break;
+            } else if (tableroLleno(tablero)) {
+                mostrarTablero(tablero);
+                System.out.println("El juego ha terminado en empate.");
+                break;
+            }//FIN DE CONTROL DE GANADOR
+
+            turnoJugador1 = !turnoJugador1;
+        }//FIN DE BUCLE PAR JUGAR
+
+        // esto guardará el estado del tablero en un archivo
+        guardarTableroEnArchivo(n, tablero);
+    
+        }//FIN IF
+    }//FIN METODO MAIN
+
+    //metodo para crear tablero 
+    private static char[][] inicializarTablero(int N) {
+        return new char[N][N];
+    }
+
+    //metodo para mostrar el archivo
+    private static void mostrarTablero(char[][] tablero) {
+        System.out.println("Estado actual del tablero:");
+        for (int i = 0; i < tablero.length; i++) {
+            for (int j = 0; j < tablero[i].length; j++) {
+                System.out.print(tablero[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }//FIN METODO MOSTRAR ARCHIVO
+
+    //metodo para realizar los movimientos
+    private static void realizarMovimiento(char[][] tablero, char ficha) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true){
+            System.out.print("Ingrese la fila y columna separadas por espacio (ej. 1 2): ");
+            int fila = scanner.nextInt() - 1;
+            int columna = scanner.nextInt() - 1;
+
+            if (fila >= 0 && fila < tablero.length && columna >= 0 && columna < tablero[0].length && tablero[fila][columna] == 0) {
+                tablero[fila][columna] = ficha;
+                break;
+            } else {
+                System.out.println("Movimiento no válido. Inténtelo de nuevo.");
+            }
+        }
+    }//FIN METODO REALIZAR MOVIMIENTOS
+
+    //metodo para definir ganador
+    private static boolean haGanado(char[][] tablero, char ficha) {
+    	
+        // Verificar filas
+        for (int i = 0; i < tablero.length; i++) {
+            boolean ganadorEnFila = true;
+            for (int j = 0; j < tablero[i].length; j++) {
+                if (tablero[i][j] != ficha) {
+                    ganadorEnFila = false;
+                    break;
+                }
+            }
+            if (ganadorEnFila) {
+                return true;
+            }
+        }
+
+        // Verificar columnas
+        for (int j = 0; j < tablero[0].length; j++) {
+            boolean ganadorEnColumna = true;
+            for (int i = 0; i < tablero.length; i++) {
+                if (tablero[i][j] != ficha) {
+                    ganadorEnColumna = false;
+                    break;
+                }
+            }
+            if (ganadorEnColumna) {
+                return true;
+            }
+        }
+
+        // Verificar diagonal principal
+        boolean ganadorEnDiagonalPrincipal = true;
+        for (int i = 0; i < tablero.length; i++) {
+            if (tablero[i][i] != ficha) {
+                ganadorEnDiagonalPrincipal = false;
+                break;
+            }
+        }
+        if (ganadorEnDiagonalPrincipal) {
+            return true;
+        }
+
+        // Verificar diagonal secundaria
+        boolean ganadorEnDiagonalSecundaria = true;
+        for (int i = 0; i < tablero.length; i++) {
+            if (tablero[i][tablero.length - 1 - i] != ficha) {
+                ganadorEnDiagonalSecundaria = false;
+                break;
+            }
+        }
+        return ganadorEnDiagonalSecundaria;
+    }//FIN METODO DEFINIR GANADOR
+
+    //metodo para contar numero de movimientos
+    private static boolean tableroLleno(char[][] tablero) {
+        for (int i = 0; i < tablero.length; i++) {
+            for (int j = 0; j < tablero[i].length; j++) {
+                if (tablero[i][j] == 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }//FIN DEL METODO CONTADOR DE MOVIMIENTOS
+
+    //metodo para guardar archivo
+    private static void guardarTableroEnArchivo(int N, char[][] tablero) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("tablero.txt"))) {
+            writer.write(Integer.toString(N));
+            writer.newLine();
+            for (int i = 0; i < tablero.length; i++) {
+                for (int j = 0; j < tablero[i].length; j++) {
+                    writer.write(tablero[i][j]);
+                }
+                writer.newLine();
+            }
+            System.out.println("Estado del tablero guardado en el archivo 'tablero.txt'");
+        } catch (IOException e) {
+            System.out.println("Error al guardar el estado del tablero en el archivo.");
+            e.printStackTrace();
+        }
+    }//FIN METODO PARA GUARDAR ARCHIVO
+}
+
+
